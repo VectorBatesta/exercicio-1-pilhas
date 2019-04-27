@@ -30,6 +30,9 @@ typedef struct{
     ponteiro deBaixo;
 }nopilha;
 
+typedef struct{
+    obj chave;
+}binariado;
 
 
 /* pilhas */
@@ -41,6 +44,7 @@ typedef struct{
 typedef struct {
     obj vetor[255]; //static = usa vetor, nao usa no de pilha
     int topo;
+    int capacidade;
 }pilhaESTATICA;
 
 
@@ -53,9 +57,10 @@ void iniciapilhaDINAMICA(pilhaDINAMICA *pilha){
 
 void iniciapilhaESTATICA(pilhaESTATICA *pilha){
     pilha->topo=0; //int indica posicao disponivel para insercao
+    pilha->capacidade = 255;
 }
 
-void pushDIN(int x, pilhaDINAMICA *pilha){
+void pushDIN(obj x, pilhaDINAMICA *pilha){
     ponteiro aux;
     aux = (ponteiro) malloc(sizeof(nopilha));
     
@@ -65,36 +70,86 @@ void pushDIN(int x, pilhaDINAMICA *pilha){
     pilha->tam ++;
 }
 
-void pushEST(int x, pilhaESTATICA *pilha){
-    pilha[pilha->topo] = x;
-    pilha->topo = pilha[pilha->topo + 1];
+int estacheiaEST(pilhaESTATICA *pilha){
+    if (pilha->topo == pilha->capacidade - 1){
+        return 1;
+    }
+    else
+        return 0;
 }
 
-int binariar(int x){
-    
-//    for(int k = x; k!=0; k=k/2) 
-    //    v = k%2
-//        push(v)
+void pushEST(obj x, pilhaESTATICA *pilha){
+    if (estacheiaEST(pilha)){
+        printf("PILHA ESTATICA ESTA CHEIA, AUMENTAR TAMANHO DA PILHA ESTATICA"
+                "NO ALGORITMO!!!");
+    }
+    else {
+        obj aux;
+        aux = x;
+        pilha[pilha->topo] = aux;
+        pilha->topo = pilha->topo + 1;
+    }
+}
 
-    int array[100];
+
+
+
+
+
+
+
+
+
+
+
+void popEST(pilhaESTATICA *pilha, binariado *binariado){
+    int x;
+
+    x = pilha[pilha->topo - 1];
+    pilha->topo = pilha->topo - 1;
+    
+    int array;
+    array = (ponteiro) malloc(sizeof(binariado));
+    
     for (int i = 0; x > 0; i++){
         array[i] = x%2;
-        x = x/2;
+        x = x / 2;
     }
-    return *array;
+    
+    binariado->chave.id = array;
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 void printPilhaEST(pilhaESTATICA *pilha){
-    
+    printf("Valores na pilha:");
+    for (int i = pilha->topo; i >= 0; i--){
+        printf("%i, ", pilha->topo);
+        pilha->topo --;
+    }
 }
 
 void printPilhaDIN(pilhaDINAMICA *pilha){
-    
+    printf("Valores na pilha:");
+    for (int i = pilha->tam; i >= 0; i--){
+        ponteiro aux;
+        aux = pilha->topo;
+        printf("%i, ", pilha->topo->chave.id);
+        aux = aux->deBaixo;
+    }
 }
-
-
 
 
 
@@ -129,55 +184,65 @@ int main(int argc, char** argv) {
     
     arquivoEntrada = fopen("arq.txt", "r");
     //arquivoEntrada = fopen(argv[1], "r");
+    arquivoSaida = fopen("arqsaida.txt", "w+");
     
     
     if (!arquivoEntrada){
         printf("Erro na abertura do arquivo");
-        return 2;
+        exit(EXIT_FAILURE);
     }
-    else{
-        
-        fscanf(arquivoEntrada, "%c", &letra);
-        
-        if (letra == "d"){
-            iniciapilhaDINAMICA(&pilhaNumerosDin);
-            usarDinamica = true;
-        } else if(letra == "e") {
-            iniciapilhaESTATICA(&pilhaNumerosEst);
-            usarDinamica = false;
+
+    fscanf(arquivoEntrada, "%c", &letra);
+
+    if (letra == 'd'){
+        iniciapilhaDINAMICA(&pilhaNumerosDin);
+        usarDinamica = true;
+    } else if(letra == 'e') {
+        iniciapilhaESTATICA(&pilhaNumerosEst);
+        usarDinamica = false;
+    } else {
+        printf("Erro\n");
+        exit(EXIT_FAILURE);
+    }
+
+
+    for(int i = 1; linha[i] != EOF; i++){
+        int N;
+        fscanf(arquivoEntrada, "%i", &N);
+        obj numero;
+        numero.id = N;
+        if(usarDinamica) {
+            pushDIN(numero, &pilhaNumerosDin);
         } else {
-            printf("Erro\n");
-            exit();
+            pushEST(numero, &pilhaNumerosEst);
         }
+    }
+
+
+
+            // 3 - escrever no arquivo de saida
+    if(!usarDinamica) {
+        printPilhaEST(&pilhaNumerosEst);
         
+        int N;
+        N = (ponteiro) malloc(sizeof(binariado));
         
+        for(int i = 2; linha[i] != EOF; i++){
+            popEST(&pilhaNumerosEst, &N);
+            fprintf(arquivoSaida, "%d\n", N);
+        }
+
+    } else {
+        printPilhaDIN(&pilhaNumerosDin);
         for(int i = 1; linha[i] != EOF; i++){
             int N;
-            fscanf(arquivoEntrada, "%i", &N);
-            obj numero;
-            numero.id = N;
-            if(usarDinamica) {
-                pushDIN(numero, &pilhaNumerosDin);
-            } else {
-                pushEST(numero, &pilhaNumerosEst);
-            }
+            
+            
         }
-        
-        // imprimir pílha
-        if(!usarDinamica) {
-            printPilhaEST(&pilhaNumerosEst);
-        } else {
-            printPilhaDIN(&pilhaNumerosDin);
-        }
-        
-        
-        // 2 - Conversao dos numeros
-        
-        // 3 - escrever no arquivo de saida
-        
-        // 4 - fechar os arquivos de entrada e saida
-        fclose(arquivoEntrada);  
     }
+
+    fclose(arquivoEntrada);
+    fclose(arquivoSaida);
     
     
     
@@ -186,31 +251,21 @@ int main(int argc, char** argv) {
 
 
 /*
-
 10    
 101
 110
-
-
 - pilhaNumeros
 - PilhaConversao
-
 leitura
 - ler um numero
 - push na pilha de Numeros
-
 Pilha (cheia de numeros inteiros) já na ordem inversa
-
 Conversao
-
 - eqnto a pilha não estiver vazia
 	- pop
 	- Binariar
 	- escreve no arquivo de saida
 	
-
 Binariar (num)
 	- inicializa PilhaNumeros = vazia
-
-
 */
